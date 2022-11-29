@@ -1,10 +1,14 @@
 const articles = document.querySelectorAll("article");
 
-(function generateTitleLinks() {
+generateTitleLinks();
+
+function generateTitleLinks(customSelector = "") {
   clearTitleLinks();
 
+  const curatedArticles = document.querySelectorAll(`article${customSelector}`);
+
   // generate titleLinks
-  articles.forEach(({ id }) => {
+  curatedArticles.forEach(({ id }) => {
     const articleTitle = document.querySelector(`#${id} > .post-title`).innerText;
 
     const articleTitleLink = document.createElement("a");
@@ -18,7 +22,7 @@ const articles = document.querySelectorAll("article");
 
     document.querySelector(".titles").appendChild(articleTitleItem);
   });
-})();
+}
 
 function titleClickHandler(event) {
   event.preventDefault();
@@ -48,3 +52,39 @@ const authors = document.querySelectorAll(".authors a");
 function clearTitleLinks() {
   document.querySelector(".titles").innerHTML = "";
 }
+
+(function generateTags() {
+  articles.forEach(article => {
+    const articleTagList = article.querySelector(".post-tags > ul");
+    const articleTags = article.dataset.tags.split(" ");
+
+    articleTags.forEach(tag => {
+      const newArticleTag = document.createElement("li");
+      newArticleTag.innerHTML = `&nbsp;<a href="#tag-${tag}">${tag}</a>`;
+
+      articleTagList.appendChild(newArticleTag);
+    });
+  });
+})();
+
+function articleTagClickHandler(event) {
+  event.preventDefault();
+
+  const articleTag = event.currentTarget;
+  const href = articleTag.getAttribute("href");
+  const tag = href.split("-").at(1);
+
+  const activeTags = document.querySelectorAll("a.active[href^='#tag-']");
+  activeTags.forEach(tag => tag.classList.remove("active"));
+
+  const linksWithTheSameHref = document.querySelectorAll(`a[href^='${href}']`);
+  linksWithTheSameHref.forEach(tag => tag.classList.add("active"));
+
+  generateTitleLinks(`[data-tags~="${tag}"]`);
+}
+
+(function addClickListenersToArticleTags() {
+  const tagLinks = document.querySelectorAll("a[href^='#tag-']");
+
+  tagLinks.forEach(tag => tag.addEventListener("click", articleTagClickHandler));
+})();
