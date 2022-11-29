@@ -88,3 +88,23 @@ function articleTagClickHandler(event) {
 
   tagLinks.forEach(tag => tag.addEventListener("click", articleTagClickHandler));
 })();
+
+(function generateArticleAuthors() {
+  articles.forEach(article => {
+    const author = article.getAttribute("data-author");
+    const authorSlug = author.replace(" ", "-").toLowerCase();
+
+    const authorLink = document.createElement("a");
+    authorLink.innerText = author;
+    authorLink.href = `#${authorSlug}`;
+    authorLink.addEventListener("click", articleAuthorClickHandler);
+
+    const articleAuthorWrapper = article.querySelector(".post-author");
+    articleAuthorWrapper.appendChild(authorLink);
+  });
+})();
+
+function articleAuthorClickHandler(event) {
+  const author = event.currentTarget.innerText;
+  generateTitleLinks(`[data-author="${author}"]`);
+}
