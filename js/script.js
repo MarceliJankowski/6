@@ -1,5 +1,13 @@
 const articles = document.querySelectorAll("article");
 
+const templates = {
+  articleLink: Handlebars.compile(document.querySelector("#template-article-link").innerHTML),
+  articleTag: Handlebars.compile(document.querySelector("#template-article-tag").innerHTML),
+  articleAuthor: Handlebars.compile(document.querySelector("#template-article-author").innerHTML),
+  tagCloudLink: Handlebars.compile(document.querySelector("#template-tag-cloud-link").innerHTML),
+  authorLink: Handlebars.compile(document.querySelector("#template-author-link").innerHTML),
+};
+
 generateTitleLinks();
 
 function generateTitleLinks(customSelector = "") {
@@ -11,17 +19,15 @@ function generateTitleLinks(customSelector = "") {
   curatedArticles.forEach(({ id }) => {
     const articleTitle = document.querySelector(`#${id} > .post-title`).innerText;
 
-    const articleTitleLink = document.createElement("a");
-    articleTitleLink.href = `#${id}`;
-    articleTitleLink.innerHTML = `<span>${articleTitle}</span>`;
+    const linkHTMLData = { id, title: articleTitle };
+    const linkHTML = templates.articleLink(linkHTMLData);
 
-    const articleTitleItem = document.createElement("li");
-    articleTitleItem.appendChild(articleTitleLink);
-
-    articleTitleLink.addEventListener("click", titleClickHandler);
-
-    document.querySelector(".titles").appendChild(articleTitleItem);
+    document.querySelector(".titles").insertAdjacentHTML("beforeend", linkHTML);
   });
+
+  // Why not double time complexity right?
+  const createdTitleLinks = document.querySelectorAll(".titles a");
+  createdTitleLinks.forEach(link => link.addEventListener("click", titleClickHandler));
 }
 
 // clear titleLinks whenever user clicks on tag or author
@@ -62,10 +68,10 @@ class SetWithAmounts {
     articleTags.forEach(tag => {
       uniqueTags.add(tag);
 
-      const newArticleTag = document.createElement("li");
-      newArticleTag.innerHTML = `&nbsp;<a href="#tag-${tag}">${tag}</a>`;
+      const tagHTMLData = { tag };
+      const tagHTML = templates.articleTag(tagHTMLData);
 
-      articleTagList.appendChild(newArticleTag);
+      articleTagList.insertAdjacentHTML("beforeend", tagHTML);
     });
   });
 
@@ -74,23 +80,20 @@ class SetWithAmounts {
 
 function generateTagList(tags) {
   const tagList = document.querySelector(".tags");
+  const allTagsData = {
+    tags: [],
+  };
 
   tags.forEach(({ val, amount }) => {
-    const newTagListItemLink = document.createElement("a");
-    newTagListItemLink.href = `#tag-${val}`;
-    newTagListItemLink.innerText = val;
-
-    const newTagListItemAmount = document.createElement("span");
-    newTagListItemAmount.innerHTML = `&nbsp;(${amount})`;
-
-    const newTagListItem = document.createElement("li");
-    newTagListItem.appendChild(newTagListItemLink);
-    newTagListItem.appendChild(newTagListItemAmount);
-
-    newTagListItemLink.addEventListener("click", tagListItemClickHandler);
-
-    tagList.appendChild(newTagListItem);
+    allTagsData.tags.push({
+      tag: val,
+      amount,
+    });
   });
+
+  tagList.innerHTML = templates.tagCloudLink(allTagsData);
+
+  document.querySelectorAll(".tags a").forEach(tag => tag.addEventListener("click", tagListItemClickHandler));
 }
 
 function tagListItemClickHandler(event) {
@@ -114,14 +117,16 @@ function tagListItemClickHandler(event) {
 
     uniqueAuthors.add(author);
 
-    const authorLink = document.createElement("a");
-    authorLink.innerText = author;
-    authorLink.href = `#${authorSlug}`;
-    authorLink.addEventListener("click", articleAuthorClickHandler);
+    const authorHTMLData = { author, authorSlug };
+    const authorHTML = templates.articleAuthor(authorHTMLData);
 
     const articleAuthorWrapper = article.querySelector(".post-author");
-    articleAuthorWrapper.appendChild(authorLink);
+    articleAuthorWrapper.insertAdjacentHTML("beforeend", authorHTML);
   });
+
+  document
+    .querySelectorAll(".post-author > a")
+    .forEach(author => author.addEventListener("click", articleAuthorClickHandler));
 
   generateAuthorList(uniqueAuthors.values);
 })();
@@ -129,17 +134,23 @@ function tagListItemClickHandler(event) {
 function generateAuthorList(authors) {
   const authorList = document.querySelector(".authors");
 
+  const allAuthorsData = {
+    tags: [],
+  };
+
   authors.forEach(({ val, amount }) => {
-    const newAuthorListItemLink = document.createElement("a");
-    newAuthorListItemLink.href = "#" + slugify(val);
-    newAuthorListItemLink.innerHTML = `<span class="author-name">${val}</span> (${amount})`;
-    newAuthorListItemLink.addEventListener("click", authorListItemClickHandler);
-
-    const newAuthorListItem = document.createElement("li");
-    newAuthorListItem.appendChild(newAuthorListItemLink);
-
-    authorList.appendChild(newAuthorListItem);
+    allAuthorsData.tags.push({
+      authorSlug: slugify(val),
+      author: val,
+      amount,
+    });
   });
+
+  authorList.innerHTML = templates.authorLink(allAuthorsData);
+
+  document
+    .querySelectorAll(".authors a")
+    .forEach(author => author.addEventListener("click", authorListItemClickHandler));
 }
 
 const authors = document.querySelectorAll(".authors > li > a");
